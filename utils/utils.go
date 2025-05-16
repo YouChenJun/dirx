@@ -86,3 +86,12 @@ func ConcatURLAndWord(url string, word string) string {
 	// 拼接结果
 	return fmt.Sprintf("%s/%s", url, word)
 }
+
+// FolderExists 检查文件是否存在
+func FolderExists(foldername string) bool {
+	foldername = NormalizePath(foldername)
+	if _, err := os.Stat(foldername); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}

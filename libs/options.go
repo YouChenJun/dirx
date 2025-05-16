@@ -9,4 +9,5 @@ type Options struct {
 	Timeout    int      //超时时间
 	FilterCode string   //过滤的状态码
 	Wordlist   string   //字典路径
+	Method     string   //请求方法
 }

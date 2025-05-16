@@ -14,19 +14,23 @@ func DirbScan(urls []string, wordlist []string, opt libs.Options) {
 	for _, url := range urls {
 		httpx := httpx.Httpx{
 			Targets: make(chan string),
-			Method:  "GET",
+			Method:  opt.Method,
 			Threads: opt.Threads,
 			FCodes:  strings.Split(opt.FilterCode, ","), //需要过滤的状态码
+			Timeout: opt.Timeout,
 		}
 
-		// 生成字典拼接的url
-		targest := spliceUrl(url, wordlist)
+		// 生成字典拼接好的url
+		targets := spliceUrl(url, wordlist)
+		utils.BlockF("Target", url)
+		utils.TSPrintF("Method: %s | Threads: %d | Filter Code: %v | TimeOut: %v", opt.Method, opt.Threads, httpx.FCodes, httpx.Timeout)
+		utils.InforF("扫描资产数:%v", len(urls))
+		utils.InforF("扫描路径数:%v", len(targets))
 
-		//	输出日志信息
-
-		results := httpx.Reset().Runner(url, targest)
-		fmt.Println(results)
-		//all.WriteString(results)
+		results := httpx.Reset().Runner(url, targets)
+		for _, result := range results {
+			fmt.Println(result["code"])
+		}
 	}
 }
 

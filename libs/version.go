@@ -9,6 +9,8 @@ const (
 	BINARY  = "dirx"
 )
 
+var LOGDIR = fmt.Sprintf("./%s-log/", BINARY)
+
 var Banner string = fmt.Sprintf(
 	`
       _   _               

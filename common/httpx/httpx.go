@@ -3,6 +3,7 @@ package httpx
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/YouChenJun/dirx/utils"
 	"io/ioutil"
 	"net"
@@ -36,6 +37,7 @@ func (h *Httpx) Reset() *Httpx {
 func (h *Httpx) Runner(url string, targets []string) []map[string]string {
 	//扫描前判断站点是否存活
 	if h.checkOnline(url) == false {
+		utils.WarnF("%s 无法访问 pass...", url)
 		return h.Results
 	}
 	var wg sync.WaitGroup
@@ -50,15 +52,9 @@ func (h *Httpx) Runner(url string, targets []string) []map[string]string {
 
 // checkOnline 判断站点是否存活
 func (h *Httpx) checkOnline(url string) bool {
-	open := false
 	urls := utils.ConcatURLAndWord(url, "index")
 	_, flag := h.requester(urls)
-	if flag {
-		open = true
-		//fmt.Println(result["body"])
-		return open
-	}
-	return open
+	return flag
 }
 
 func (h *Httpx) requester(url string) (map[string]string, bool) {
@@ -103,11 +99,12 @@ func (h *Httpx) requester(url string) (map[string]string, bool) {
 	result["url"] = url
 	result["body"] = strings.TrimSpace(string(body))
 	result["code"] = strings.ReplaceAll(strconv.Itoa(respone.StatusCode), "206", "200")
-	//result["location"] = this.locationUrl(result["code"], respone.Header)
+	result["location"] = respone.Header.Get("Location")
+	//fmt.Println(result["location"])
 	result["ctype"] = respone.Header.Get("Content-Type")
-	//result["clen"] = this.contentLength(respone.Header, string(body))
-	//result["title"] = h.title(result["code"], result["ctype"], string(body), respone.Header)
-
+	result["server"] = respone.Header.Get("Server")
+	result["status"] = respone.Status
+	result["size"] = strconv.Itoa(len(body)) // 使用读取后的 body 字节长度
 	return result, true
 }
 
@@ -123,9 +120,7 @@ func (h *Httpx) threader(wg *sync.WaitGroup) {
 	for url := range h.Targets {
 		result, flag := h.requester(url)
 		if flag && h.filter(result) {
-			//fmt.Println("bypass")
-			result = map[string]string{"url": result["url"], "code": result["code"], "ctype": result["ctype"]}
-
+			utils.InforF("%v [%v] %v %v [%v]", result["url"], result["code"], result["ctype"], result["location"], result["size"])
 			h.Results = append(h.Results, result)
 		}
 	}
@@ -139,7 +134,7 @@ func (h *Httpx) send_targets(targets []string) *Httpx {
 }
 
 func (h *Httpx) close_targets() {
-	time.Sleep(2 * time.Second)
+	time.Sleep(time.Duration(h.Timeout) * time.Second)
 	close(h.Targets)
 }
 
@@ -150,4 +145,12 @@ func (h *Httpx) filter(result map[string]string) bool {
 		return false
 	}
 	return true
+}
+func extractTitleWithGoquery(html string) string {
+	r := strings.NewReader(html)
+	doc, err := goquery.NewDocumentFromReader(r)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(doc.Find("title").Text())
 }
