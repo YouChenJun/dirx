@@ -31,6 +31,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&options.Logfile, "log", "l", "", fmt.Sprintf("日志存储路径"))
 	RootCmd.PersistentFlags().StringVarP(&options.Method, "method", "m", "GET", "扫描请求方法")
 	RootCmd.PersistentFlags().IntVarP(&options.Timeout, "timeout", "s", 2, "单次请求超时时间/s")
+	RootCmd.PersistentFlags().StringVarP(&options.OutPutFile, "outfile", "o", "", fmt.Sprintf("输出文件路径"))
 	cobra.OnInitialize(initConfig)
 }
 

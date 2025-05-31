@@ -100,11 +100,11 @@ func (h *Httpx) requester(url string) (map[string]string, bool) {
 	result["body"] = strings.TrimSpace(string(body))
 	result["code"] = strings.ReplaceAll(strconv.Itoa(respone.StatusCode), "206", "200")
 	result["location"] = respone.Header.Get("Location")
-	//fmt.Println(result["location"])
 	result["ctype"] = respone.Header.Get("Content-Type")
 	result["server"] = respone.Header.Get("Server")
 	result["status"] = respone.Status
 	result["size"] = strconv.Itoa(len(body)) // 使用读取后的 body 字节长度
+	result["time"] = time.Now().Format("2006-01-02 15:04:05")
 	return result, true
 }
 
@@ -120,7 +120,7 @@ func (h *Httpx) threader(wg *sync.WaitGroup) {
 	for url := range h.Targets {
 		result, flag := h.requester(url)
 		if flag && h.filter(result) {
-			utils.InforF("%v [%v] %v %v [%v]", result["url"], result["code"], result["ctype"], result["location"], result["size"])
+			//utils.InforF("%v [%v] %v %v [%v]", result["url"], result["code"], result["ctype"], result["location"], result["size"])
 			h.Results = append(h.Results, result)
 		}
 	}

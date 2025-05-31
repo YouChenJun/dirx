@@ -27,11 +27,12 @@ func runScan(_ *cobra.Command, _ []string) error {
 	}
 
 	if options.Wordlist == "" {
+		utils.WarnF("请配置字典信息!")
 		//当没输入字典信息时 自动加载字典
-		//return nil
+		return nil
 	}
-	//wordList := utils.ReadingFileUnique(options.Wordlist)
-	//common.DirbScan(options.Urls, wordList, options)
-	common.DirbScan(options.Urls, []string{"11", "ch/milite/", "ccc"}, options)
+	wordList := utils.ReadingFileUnique(options.Wordlist)
+	common.DirbScan(options.Urls, wordList, options)
+	//common.DirbScan(options.Urls, []string{"11", "ch/milite/", "ccc"}, options)
 	return nil
 }

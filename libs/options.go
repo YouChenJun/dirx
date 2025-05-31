@@ -10,4 +10,5 @@ type Options struct {
 	FilterCode string   //过滤的状态码
 	Wordlist   string   //字典路径
 	Method     string   //请求方法
+	OutPutFile string   //输出结果文件
 }

@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"github.com/YouChenJun/dirx/common/httpx"
 	"github.com/YouChenJun/dirx/libs"
 	"github.com/YouChenJun/dirx/utils"
@@ -11,26 +10,40 @@ import (
 var all strings.Builder
 
 func DirbScan(urls []string, wordlist []string, opt libs.Options) {
+	utils.InforF("扫描资产数:%v", len(urls))
 	for _, url := range urls {
 		httpx := httpx.Httpx{
-			Targets: make(chan string),
-			Method:  opt.Method,
-			Threads: opt.Threads,
-			FCodes:  strings.Split(opt.FilterCode, ","), //需要过滤的状态码
-			Timeout: opt.Timeout,
+			Targets:    make(chan string),
+			Method:     opt.Method,
+			Threads:    opt.Threads,
+			FCodes:     strings.Split(opt.FilterCode, ","), //需要过滤的状态码
+			Timeout:    opt.Timeout,
+			MaxRespone: 1024 * 1024 * 10,
 		}
 
 		// 生成字典拼接好的url
 		targets := spliceUrl(url, wordlist)
 		utils.BlockF("Target", url)
-		utils.TSPrintF("Method: %s | Threads: %d | Filter Code: %v | TimeOut: %v", opt.Method, opt.Threads, httpx.FCodes, httpx.Timeout)
-		utils.InforF("扫描资产数:%v", len(urls))
 		utils.InforF("扫描路径数:%v", len(targets))
+		utils.TSPrintF("Method: %s | Threads: %d | Filter Code: %v | TimeOut: %v", opt.Method, opt.Threads, httpx.FCodes, httpx.Timeout)
+		datas := httpx.Reset().Runner(url, targets)
+		var results []utils.Result
 
-		results := httpx.Reset().Runner(url, targets)
-		for _, result := range results {
-			fmt.Println(result["code"])
+		for _, data := range datas {
+			res := utils.Result{
+				Url:      data["url"],
+				Code:     data["code"],
+				Location: data["location"],
+				Ctype:    data["ctype"],
+				Server:   data["server"],
+				Status:   data["status"],
+				Size:     data["size"],
+				Body:     data["body"],
+				Time:     data["time"],
+			}
+			results = append(results, res)
 		}
+		Filter(results, opt)
 	}
 }
 
