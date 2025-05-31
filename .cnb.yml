@@ -1,0 +1,53 @@
+main:
+  push:
+    - services:
+        - docker
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        # 同名镜像构建&推送
+        - name: docker build
+          script: docker build -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:latest .
+        - name: docker push
+          script: docker push ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:latest
+
+$:
+  tag_push:
+    - docker:
+        build: .ide/Dockerfile
+      stages:
+        - name: changelog
+          image: cnbcool/changelog
+          exports:
+            latestChangeLog: LATEST_CHANGE_LOG
+        - name: create release
+          type: git:release
+          options:
+            title: release
+            description: ${LATEST_CHANGE_LOG}
+        - name: go mod
+          script: go mod vendor
+        - name: go build
+          script: |
+            mkdir -p dist
+            (
+              for GOOS in linux windows darwin; do
+                for GOARCH in amd64 arm64; do
+                  if [ "$GOOS" = "windows" ] && [ "$GOARCH" = "arm64" ]; then
+                    continue
+                  fi
+                  GOOS=$GOOS GOARCH=$GOARCH go build -o dist/dirx-$GOOS-$GOARCH
+                  if [ "$GOOS" = "darwin" ]; then
+                    upx --force-macos -f -9 dist/dirx-$GOOS-$GOARCH
+                  else
+                    upx -f -9 dist/dirx-$GOOS-$GOARCH
+                  fi
+                done
+              done
+            ) 
+        - name: release 上传附件
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - dist/dirx-*
+              - README.md
