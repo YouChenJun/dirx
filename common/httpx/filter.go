@@ -8,3 +8,7 @@ import "slices"
 func exclude_codes(code string, FCodes []string) bool {
 	return slices.Contains(FCodes, code)
 }
+
+func exclude_body(body string) bool {
+	return body == "Forbidden"
+}

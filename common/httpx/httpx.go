@@ -138,10 +138,10 @@ func (h *Httpx) close_targets() {
 	close(h.Targets)
 }
 
-// filter 过滤器
+// filter 过滤器 false则过滤掉 不保留
 func (h *Httpx) filter(result map[string]string) bool {
 	//判断是否过滤状态码
-	if exclude_codes(result["code"], h.FCodes) {
+	if exclude_codes(result["code"], h.FCodes) || exclude_body(result["body"]) {
 		return false
 	}
 	return true
