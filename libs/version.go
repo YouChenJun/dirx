@@ -3,7 +3,7 @@ package libs
 import "fmt"
 
 const (
-	VERSION = "0.1.0"
+	VERSION = "0.1.1"
 	DESC    = "目录扫描器"
 	AUTHOR  = "@Chen_Dark"
 	BINARY  = "dirx"
