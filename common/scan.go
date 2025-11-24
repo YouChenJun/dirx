@@ -1,11 +1,12 @@
 package common
 
 import (
+	"strings"
+	"sync"
+
 	"github.com/YouChenJun/dirx/common/httpx"
 	"github.com/YouChenJun/dirx/libs"
 	"github.com/YouChenJun/dirx/utils"
-	"strings"
-	"sync"
 )
 
 var all strings.Builder
@@ -41,11 +42,16 @@ func DirbScan(urls []string, wordlist []string, opt libs.Options) {
 
 // scanSingleTarget 扫描单个目标
 func scanSingleTarget(url string, wordlist []string, opt libs.Options) {
+	// 分割并去除状态码的空格
+	fcodes := strings.Split(opt.FilterCode, ",")
+	for i, code := range fcodes {
+		fcodes[i] = strings.TrimSpace(code)
+	}
 	httpx := httpx.Httpx{
 		Targets:    make(chan string),
 		Method:     opt.Method,
 		Threads:    opt.Threads,
-		FCodes:     strings.Split(opt.FilterCode, ","), //需要过滤的状态码
+		FCodes:     fcodes, //需要过滤的状态码
 		Timeout:    opt.Timeout,
 		MaxRespone: 1024 * 1024 * 10,
 	}

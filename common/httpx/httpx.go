@@ -32,36 +32,36 @@ type Httpx struct {
 var streamingContentTypePatterns = []*regexp.Regexp{
 	// Server-Sent Events
 	regexp.MustCompile(`(?i)text/event-stream`),
-	
+
 	// 通用流式
 	regexp.MustCompile(`(?i)application/.*stream`),
 	regexp.MustCompile(`(?i)text/.*stream`),
-	
+
 	// JSON 流式
 	regexp.MustCompile(`(?i)application/.*json.*stream`),
 	regexp.MustCompile(`(?i)application/x-ndjson`),
 	regexp.MustCompile(`(?i)application/jsonlines`),
 	regexp.MustCompile(`(?i)application/x-json-stream`),
-	
+
 	// 视频流
 	regexp.MustCompile(`(?i)video/.*`),
 	regexp.MustCompile(`(?i)application/x-mpegURL`),
 	regexp.MustCompile(`(?i)application/vnd\.apple\.mpegurl`),
 	regexp.MustCompile(`(?i)application/dash\+xml`),
-	
+
 	// 音频流
 	regexp.MustCompile(`(?i)audio/.*`),
-	
+
 	// gRPC 和其他 RPC 流
 	regexp.MustCompile(`(?i)application/grpc`),
 	regexp.MustCompile(`(?i)application/grpc\+.*`),
-	
+
 	// Chunked transfer (通过 Transfer-Encoding)
 	regexp.MustCompile(`(?i)multipart/x-mixed-replace`),
-	
+
 	// WebSocket 升级（虽然通常是 101 状态码）
 	regexp.MustCompile(`(?i)application/websocket`),
-	
+
 	// 其他流式协议
 	regexp.MustCompile(`(?i)application/octet-stream.*stream`),
 }
@@ -76,7 +76,7 @@ func (h *Httpx) Reset() *Httpx {
 // Runner 扫描运行runner
 func (h *Httpx) Runner(url string, targets []string) []map[string]string {
 	//扫描前判断站点是否存活
-	if h.checkOnline(url) == false {
+	if !h.checkOnline(url) {
 		utils.WarnF("%s 无法访问 pass...", url)
 		return h.Results
 	}
@@ -144,7 +144,7 @@ func (h *Httpx) requester(url string) (map[string]string, bool) {
 	// 检测是否为流式响应类型
 	contentType := respone.Header.Get("Content-Type")
 	transferEncoding := respone.Header.Get("Transfer-Encoding")
-	
+
 	// 多维度判断是否为流式连接
 	isLongConnection := h.isStreamingResponse(contentType, transferEncoding)
 
@@ -207,7 +207,8 @@ func (h *Httpx) requester(url string) (map[string]string, bool) {
 	result["server"] = respone.Header.Get("Server")
 	result["status"] = respone.Status
 	result["size"] = strconv.Itoa(len(body)) // 使用读取后的 body 字节长度
-	if contentLength > 0 {
+	// 设置content-length，包括0的情况，以便filter函数可以检查
+	if contentLength >= 0 {
 		result["content-length"] = strconv.FormatInt(contentLength, 10)
 	}
 	result["time"] = time.Now().Format("2006-01-02 15:04:05")
@@ -227,7 +228,7 @@ func (h *Httpx) isStreamingResponse(contentType, transferEncoding string) bool {
 		// chunked 本身不一定是流式，但结合 Content-Length 为 -1 时通常是流式
 		// 这里暂时不单独判断，留给后续逻辑
 	}
-	
+
 	// 2. 使用正则匹配 Content-Type
 	if contentType != "" {
 		for _, pattern := range streamingContentTypePatterns {
@@ -236,7 +237,7 @@ func (h *Httpx) isStreamingResponse(contentType, transferEncoding string) bool {
 			}
 		}
 	}
-	
+
 	// 3. 特殊关键词匹配（兜底策略）
 	contentTypeLower := strings.ToLower(contentType)
 	streamKeywords := []string{
@@ -247,13 +248,13 @@ func (h *Httpx) isStreamingResponse(contentType, transferEncoding string) bool {
 		"grpc",
 		"websocket",
 	}
-	
+
 	for _, keyword := range streamKeywords {
 		if strings.Contains(contentTypeLower, keyword) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -281,7 +282,7 @@ func (h *Httpx) close_targets() {
 	close(h.Targets)
 }
 
-// filter 过滤器 false则过滤掉 不保留
+// filter 过滤器 false则过滤掉 不保留 过滤无效响应（状态码、空内容等）
 func (h *Httpx) filter(result map[string]string) bool {
 	//判断是否过滤状态码
 	if exclude_codes(result["code"], h.FCodes) || exclude_body(result["body"]) {
@@ -290,6 +291,12 @@ func (h *Httpx) filter(result map[string]string) bool {
 	//判断body大小是否为0
 	if result["size"] == "0" {
 		return false
+	}
+	//判断content-length是否为0
+	if contentLength, exists := result["content-length"]; exists {
+		if contentLength == "0" {
+			return false
+		}
 	}
 	return true
 }

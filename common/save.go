@@ -2,12 +2,14 @@ package common
 
 import (
 	"encoding/json"
+	"os"
+
 	"github.com/YouChenJun/dirx/libs"
 	"github.com/YouChenJun/dirx/utils"
-	"os"
 )
 
-// Filter 过滤扫描结果 302 301等情况
+// Filter 过滤扫描结果：基于统计信息过滤重复的Location和Size
+// 注意：状态码过滤（如302、404等）已在httpx.filter中处理
 func Filter(result []utils.Result, opt libs.Options) {
 	// 定义两个 map 来统计 Location 和 Size 的出现次数
 	locationCount := make(map[string]int)
