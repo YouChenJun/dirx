@@ -31,7 +31,9 @@ func Filter(result []utils.Result, opt libs.Options) {
 	// 第二次遍历：过滤掉需要删除的记录
 	for _, r := range result {
 		// 检查是否满足删除条件
-		if locationCount[r.Location] >= 10 || sizeCount[r.Size] >= 10 && r.Ctype != "application/octet-stream" {
+		// 如果 Location 或 Size 出现频率 >= 10 次，且不是二进制文件，则过滤
+		// 注意：使用括号确保先计算频率条件，再检查 content-type，避免运算符优先级问题
+		if (locationCount[r.Location] >= 10 || sizeCount[r.Size] >= 10) && r.Ctype != "application/octet-stream" {
 			continue // 跳过需要删除的记录
 		}
 		filteredResults = append(filteredResults, r)
