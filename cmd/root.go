@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/YouChenJun/dirx/libs"
 	"github.com/YouChenJun/dirx/utils"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var options = libs.Options{}
@@ -25,8 +26,9 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&options.Target, "target", "u", "", "需要扫描的url目标")
 	RootCmd.PersistentFlags().StringVarP(&options.TargetFile, "targets", "T", "", "需要扫描的url目标文件")
-	RootCmd.PersistentFlags().IntVarP(&options.Threads, "threads", "t", 20, "扫描线程数")
-	RootCmd.PersistentFlags().StringVarP(&options.FilterCode, "fcode", "x", "400,404,406,416,501,502,503", "需要过滤的状态码")
+	RootCmd.PersistentFlags().IntVarP(&options.Threads, "threads", "t", 50, "单个任务的扫描线程数")
+	RootCmd.PersistentFlags().IntVarP(&options.Concurrency, "concurrency", "c", 4, "并行任务数")
+	RootCmd.PersistentFlags().StringVarP(&options.FilterCode, "fcode", "x", "400,404,406,416,501,502,503,302", "需要过滤的状态码")
 	RootCmd.PersistentFlags().StringVarP(&options.Wordlist, "wordlist", "w", "", "字典文件路径")
 	RootCmd.PersistentFlags().StringVarP(&options.Logfile, "log", "l", "", fmt.Sprintf("日志存储路径"))
 	RootCmd.PersistentFlags().StringVarP(&options.Method, "method", "m", "GET", "扫描请求方法")
