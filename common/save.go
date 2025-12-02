@@ -37,11 +37,15 @@ func Filter(result []utils.Result, opt libs.Options) {
 			continue // 跳过需要删除的记录
 		}
 		filteredResults = append(filteredResults, r)
+
+		// 只有在没有指定输出文件时才显示扫描结果信息
+		if opt.OutPutFile == "" {
+			utils.InforF("%s [%s] %s %s [%s]", r.Url, r.Code, r.Ctype, r.Location, r.Size)
+		}
 	}
 
 	// 如果需要保存过滤后的结果，可以调用 SaveJsonData 函数
 	if len(filteredResults) > 0 {
-		//utils.InforF("%v [%v] %v %v [%v]", data["url"], data["code"], data["ctype"], data["location"], data["size"])
 		err := SaveJsonData(filteredResults, opt)
 		if err != nil {
 			// 处理错误
@@ -64,7 +68,8 @@ func SaveJsonData(result []utils.Result, opt libs.Options) error {
 		if _, err := file.WriteString(string(jsonData) + "\n"); err != nil {
 			return err
 		}
-		utils.InforF("%s [%s] %s %s [%s]", r.Url, r.Code, r.Ctype, r.Location, r.Size)
+		// 当指定了输出文件时，不在控制台显示扫描结果信息
+		// 因为这里是在SaveJsonData函数中，说明用户指定了输出文件
 	}
 	return nil
 }

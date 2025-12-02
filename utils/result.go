@@ -1,6 +1,7 @@
 package utils
 
 type Result struct {
+	Input    string `json:"input"` //目录扫描输入
 	Url      string `json:"url"`
 	Body     string `json:"body"`
 	Code     string `json:"code"`

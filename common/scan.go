@@ -63,9 +63,9 @@ func scanSingleTarget(url string, wordlist []string, opt libs.Options) {
 	utils.TSPrintF("Method: %s | Threads: %d | Filter Code: %v | TimeOut: %v", opt.Method, opt.Threads, httpx.FCodes, httpx.Timeout)
 	datas := httpx.Reset().Runner(url, targets)
 	var results []utils.Result
-
 	for _, data := range datas {
 		res := utils.Result{
+			Input:    url, // 添加Input字段，即目标URL
 			Url:      data["url"],
 			Code:     data["code"],
 			Location: data["location"],
