@@ -48,12 +48,14 @@ func scanSingleTarget(url string, wordlist []string, opt libs.Options) {
 		fcodes[i] = strings.TrimSpace(code)
 	}
 	httpx := httpx.Httpx{
-		Targets:    make(chan string),
-		Method:     opt.Method,
-		Threads:    opt.Threads,
-		FCodes:     fcodes, //需要过滤的状态码
-		Timeout:    opt.Timeout,
-		MaxRespone: 1024 * 1024 * 10,
+		Targets:      make(chan string),
+		Method:       opt.Method,
+		Threads:      opt.Threads,
+		FCodes:       fcodes, //需要过滤的状态码
+		FBody:        strings.Split(opt.FilterBody, ","), //需要过滤的响应body内容
+		MinBodySize:  opt.MinBodySize,                   //最小响应body大小
+		Timeout:      opt.Timeout,
+		MaxRespone:   1024 * 1024 * 10,
 	}
 
 	// 生成字典拼接好的url

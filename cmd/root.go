@@ -34,6 +34,8 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&options.Method, "method", "m", "GET", "扫描请求方法")
 	RootCmd.PersistentFlags().IntVarP(&options.Timeout, "timeout", "s", 2, "单次请求超时时间/s")
 	RootCmd.PersistentFlags().StringVarP(&options.OutPutFile, "outfile", "o", "", fmt.Sprintf("输出文件路径"))
+	RootCmd.PersistentFlags().StringVarP(&options.FilterBody, "fbody", "b", "Invalid service url,接口不存在", "需要过滤的响应body内容，多个用逗号分隔")
+	RootCmd.PersistentFlags().IntVarP(&options.MinBodySize, "min-body-size", "", 100, "最小响应body大小，小于此值且匹配fbody内容时将被过滤")
 	cobra.OnInitialize(initConfig)
 }
 

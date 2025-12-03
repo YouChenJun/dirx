@@ -17,15 +17,17 @@ import (
 )
 
 type Httpx struct {
-	Targets    chan string
-	Results    []map[string]string
-	Errnum     int
-	Checks     []string
-	Timeout    int
-	Method     string
-	MaxRespone int
-	Threads    int
-	FCodes     []string
+	Targets     chan string
+	Results     []map[string]string
+	Errnum      int
+	Checks      []string
+	Timeout     int
+	Method      string
+	MaxRespone  int
+	Threads     int
+	FCodes      []string
+	FBody       []string
+	MinBodySize int
 }
 
 // 流式响应的 Content-Type 正则匹配模式
@@ -282,7 +284,7 @@ func (h *Httpx) close_targets() {
 	close(h.Targets)
 }
 
-// filter 过滤器 false则过滤掉 不保留 过滤无效响应（状态码、空内容等）
+// filter 过滤器 false则过滤掉 不保留 过滤无效响应（状态码、空内容等）、特定的 body 内容过滤
 func (h *Httpx) filter(result map[string]string) bool {
 	//判断是否过滤状态码
 	if exclude_codes(result["code"], h.FCodes) || exclude_body(result["body"]) {
@@ -297,6 +299,11 @@ func (h *Httpx) filter(result map[string]string) bool {
 		if contentLength == "0" {
 			return false
 		}
+	}
+	//判断是否过滤特定body内容（根据body大小和关键字）
+	bodySize, _ := strconv.Atoi(result["size"])
+	if exclude_body_content(result["body"], h.FBody, bodySize, h.MinBodySize) {
+		return false
 	}
 	return true
 }
